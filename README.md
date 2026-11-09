@@ -72,7 +72,16 @@ LedgerLine/
    ```
    The backend API will run at `http://localhost:5000`. A health check is available at `GET http://localhost:5000/api/health`.
 
-### 2. Frontend Setup
+### 2. Database Initialization (Optional / Controlled)
+
+To apply the schema and seed data to your local PostgreSQL instance:
+```bash
+cd backend
+npm run db:init
+```
+*(Uses `.env` parameters to connect safely without dropping existing tables).*
+
+### 3. Frontend Setup
 
 1. Navigate to the `frontend/` directory:
    ```bash
