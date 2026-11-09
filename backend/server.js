@@ -5,6 +5,8 @@ require('dotenv').config();
 const authRoutes = require('./routes/authRoutes');
 const accountRoutes = require('./routes/accountRoutes');
 const transactionRoutes = require('./routes/transactionRoutes');
+const adminRoutes = require('./routes/adminRoutes');
+const auditRoutes = require('./routes/auditRoutes');
 const { authenticateToken, requireRole } = require('./middleware/auth');
 const { query } = require('./db');
 
@@ -45,6 +47,8 @@ app.get('/api/ready', async (req, res) => {
 app.use('/api/auth', authRoutes);
 app.use('/api/accounts', accountRoutes);
 app.use('/api/transactions', transactionRoutes);
+app.use('/api/admin', adminRoutes);
+app.use('/api/audit', auditRoutes);
 
 // Admin-Protected RBAC Verification Route
 app.get('/api/admin/ping', authenticateToken, requireRole('ADMIN'), (req, res) => {

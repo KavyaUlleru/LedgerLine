@@ -76,7 +76,7 @@ async function request(endpoint, options = {}) {
 }
 
 // ----------------------------------------------------------------------------
-// Auth Endpoints
+// Auth Endpoints (Task 1)
 // ----------------------------------------------------------------------------
 
 export async function loginUser(email, password) {
@@ -152,5 +152,40 @@ export async function executeWithdraw({ accountId, amountPaise, idempotencyKey }
       accountId,
       amount: amountPaise,
     }),
+  });
+}
+
+// ----------------------------------------------------------------------------
+// Admin & Audit Endpoints (Task 3)
+// ----------------------------------------------------------------------------
+
+export async function fetchAdminUsers() {
+  return request('/admin/users', {
+    method: 'GET',
+  });
+}
+
+export async function updateAccountStatus(accountId, status, reason = '') {
+  return request(`/admin/accounts/${accountId}/status`, {
+    method: 'PATCH',
+    body: JSON.stringify({ status, reason }),
+  });
+}
+
+export async function fetchAuditLogs(filters = {}) {
+  const queryParams = new URLSearchParams();
+  if (filters.action) queryParams.append('action', filters.action);
+  if (filters.outcome) queryParams.append('outcome', filters.outcome);
+  if (filters.limit) queryParams.append('limit', filters.limit);
+
+  const queryStr = queryParams.toString() ? `?${queryParams.toString()}` : '';
+  return request(`/audit/logs${queryStr}`, {
+    method: 'GET',
+  });
+}
+
+export async function fetchReconciliation() {
+  return request('/audit/reconciliation', {
+    method: 'GET',
   });
 }

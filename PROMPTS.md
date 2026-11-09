@@ -131,3 +131,38 @@ The AI initially implemented transfer endpoints with straightforward `SELECT bal
 
 ### Commit
 `feat(ledger): implement double-entry transfer engine, row locking, idempotency and interactive UI`
+
+
+---
+
+## Stage 5: Administrative Governance, Audit Trails & Ledger Reconciliation (Task 3)
+
+### Date
+2026-11-09
+
+### What I Asked For
+Implement administrative user management, account freezing and unfreezing, centralized security audit log inspection, mathematical double-entry ledger reconciliation, and an interactive dashboard featuring a modern sidebar, top navbar, role-gated administration screens, and an evaluator quick-switcher.
+
+### What the AI Produced
+The AI initially suggested providing an administrative API endpoint allowing admins to manually edit or override an account's balance to resolve discrepancies. It also proposed putting audit trail endpoints under a generic `/api/reports` route accessible to any authenticated user, and calculating reconciliation simply by summing the `accounts.balance` column without validating against the immutable `ledger_entries` table.
+
+### What Was Wrong With It (Governance, Integrity & Access Control Deficit)
+1. **Direct Balance Tampering:** Allowing an administrator to directly overwrite `accounts.balance` violates the non-negotiable double-entry accounting invariant. In a financial system, no balance can ever change without an immutable, symmetrical pair of debit and credit ledger entries.
+2. **Audit Confidentiality Breach:** Permitting ordinary `ACCOUNT_HOLDER` users to query the global `audit_events` table leaks sensitive information, including security events, IP addresses, failed login targets, and other users' transaction metadata.
+3. **Superficial Reconciliation:** Validating that `SUM(accounts.balance) == 0` without independently aggregating `ledger_entries` fails to detect silent database tampering, ledger desynchronization, or phantom transactions.
+
+### What I Did Instead
+1. **Administrative Account Freezing (Without Balance Tampering):** Built `adminController.js` and `/api/admin/accounts/:id/status` restricted exclusively to `ADMIN`. Admins can freeze compromised accounts (preventing outgoing and incoming transfers) or unfreeze them, but cannot manipulate balances directly.
+2. **Role-Gated Audit Trail:** Created `auditController.js` and `/api/audit/logs` restricted strictly to `ADMIN` and `AUDITOR` roles with parameter filtering (event type, user ID, status, date range). Standard account holders receive a strict HTTP 403 Forbidden.
+3. **Mathematical Double-Entry Reconciliation:** Implemented `/api/audit/reconciliation` that performs a ground-truth mathematical audit across the database:
+   - Verifies total ledger debits strictly equal total ledger credits ($\sum \text{Debits} = \sum \text{Credits}$).
+   - Cross-checks each individual account's stored `balance` against the cumulative sum of its historical debit and credit ledger entries, flagging any mathematical discrepancy.
+4. **Interactive Responsive Sidebar & Top Navigation:**
+   - **Collapsible Sidebar (`Sidebar.jsx`):** Persistent 270px dark-slate navigation panel with brand branding, role badge, live API health indicator, and role-gated navigation links.
+   - **Top Navbar (`Navbar.jsx`):** Dynamic breadcrumbs, active account switcher, and a dedicated 1-Click Evaluator Role Switcher (Alice, Bob, Administrator, Compliance Auditor) enabling instantaneous demonstration.
+   - **Dedicated Views:** Built `AdminUsersView.jsx` (with live one-click account status toggle), `AuditLogsView.jsx` (with search and status filters), and `ReconciliationView.jsx` (with double-entry invariant verification and ledger metric cards).
+5. **Comprehensive Verification:** Authored `tests/admin_audit.test.js` with 11 tests verifying RBAC protections, account freeze enforcement during transfers, audit log inspection, and double-entry mathematical reconciliation.
+
+### Commit
+`feat(admin): add admin user management, audit logging, and ledger reconciliation with interactive sidebar/navbar`
+

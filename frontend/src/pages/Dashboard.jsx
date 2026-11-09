@@ -7,23 +7,30 @@ import {
   executeWithdraw,
   generateUUID,
 } from '../services/api';
+import AdminUsersView from '../components/AdminUsersView';
+import AuditLogsView from '../components/AuditLogsView';
+import ReconciliationView from '../components/ReconciliationView';
 
-export default function Dashboard({ user, accounts: initialAccounts, onRefreshAccounts }) {
-  const [accounts, setAccounts] = useState(initialAccounts || []);
-  const [activeTab, setActiveTab] = useState('overview'); // 'overview', 'transfer', 'deposit_withdraw', 'statement'
-  const [selectedAccountId, setSelectedAccountId] = useState(
-    initialAccounts?.[0]?.id || null
-  );
+export default function Dashboard({
+  user,
+  currentView = 'overview',
+  onSelectView,
+  accounts: initialAccounts = [],
+  selectedAccountId,
+  setSelectedAccountId,
+  onRefreshAccounts,
+}) {
+  const [accounts, setAccounts] = useState(initialAccounts);
 
   // Transfer State
   const [destAccountNumber, setDestAccountNumber] = useState('');
   const [transferAmountInr, setTransferAmountInr] = useState('');
   const [transferIdempotencyKey, setTransferIdempotencyKey] = useState(generateUUID());
   const [transferLoading, setTransferLoading] = useState(false);
-  const [transferFeedback, setTransferFeedback] = useState(null); // { type: 'success' | 'error', message, details }
+  const [transferFeedback, setTransferFeedback] = useState(null);
 
   // Deposit / Withdraw State
-  const [dwType, setDwType] = useState('DEPOSIT'); // 'DEPOSIT' or 'WITHDRAW'
+  const [dwType, setDwType] = useState('DEPOSIT');
   const [dwAmountInr, setDwAmountInr] = useState('');
   const [dwLoading, setDwLoading] = useState(false);
   const [dwFeedback, setDwFeedback] = useState(null);
@@ -33,19 +40,20 @@ export default function Dashboard({ user, accounts: initialAccounts, onRefreshAc
   const [statementLoading, setStatementLoading] = useState(false);
   const [statementError, setStatementError] = useState('');
 
-  // Update selected account when accounts load
+  // Synchronize accounts state with props
   useEffect(() => {
-    if (accounts.length > 0 && !selectedAccountId) {
-      setSelectedAccountId(accounts[0].id);
+    setAccounts(initialAccounts);
+    if (initialAccounts.length > 0 && !selectedAccountId) {
+      setSelectedAccountId(initialAccounts[0].id);
     }
-  }, [accounts, selectedAccountId]);
+  }, [initialAccounts]);
 
-  // Load statement when selected account changes or statement tab is opened
+  // Load statement when selected account changes or statement view is active
   useEffect(() => {
-    if (selectedAccountId && activeTab === 'statement') {
+    if (selectedAccountId && currentView === 'statement') {
       loadStatement(selectedAccountId);
     }
-  }, [selectedAccountId, activeTab]);
+  }, [selectedAccountId, currentView]);
 
   const loadStatement = async (accId) => {
     setStatementLoading(true);
@@ -73,14 +81,12 @@ export default function Dashboard({ user, accounts: initialAccounts, onRefreshAc
     }
   };
 
-  // Convert INR decimal string to integer paise
   const toPaise = (inrStr) => {
     const parsed = parseFloat(inrStr);
     if (isNaN(parsed) || parsed <= 0) return 0;
     return Math.round(parsed * 100);
   };
 
-  // Format paise to INR currency string
   const formatINR = (paise) => {
     const val = (Number(paise || 0) / 100).toLocaleString('en-IN', {
       minimumFractionDigits: 2,
@@ -125,7 +131,6 @@ export default function Dashboard({ user, accounts: initialAccounts, onRefreshAc
         details: `Tx ID: #${result.transactionId} • Double-entry balanced • New balance: ${formatINR(result.sourceAccount.newBalance)}`,
       });
 
-      // Clear input and generate new idempotency key for next operation
       setTransferAmountInr('');
       setDestAccountNumber('');
       setTransferIdempotencyKey(generateUUID());
@@ -194,57 +199,31 @@ export default function Dashboard({ user, accounts: initialAccounts, onRefreshAc
 
   const selectedAccount = accounts.find((a) => a.id === parseInt(selectedAccountId, 10)) || accounts[0];
 
+  // Render Role-Gated Admin / Audit Views
+  if (currentView === 'admin_users') {
+    return <AdminUsersView />;
+  }
+
+  if (currentView === 'audit_logs') {
+    return <AuditLogsView />;
+  }
+
+  if (currentView === 'reconciliation') {
+    return <ReconciliationView />;
+  }
+
   return (
-    <div className="dashboard-container">
-      {/* Top Banner */}
-      <div className="welcome-banner">
-        <div>
-          <h2>Welcome, {user.name}!</h2>
-          <p className="welcome-subtext">
-            Role: <strong className="highlight-role">{user.role}</strong> ({user.email})
-          </p>
-        </div>
-        <div className="security-tag">
-          🔒 Double-Entry Engine Active
-        </div>
-      </div>
-
-      {/* Navigation Tabs */}
-      <div className="dashboard-nav-tabs">
-        <button
-          className={`tab-btn ${activeTab === 'overview' ? 'active' : ''}`}
-          onClick={() => setActiveTab('overview')}
-        >
-          💳 Accounts Overview
-        </button>
-        <button
-          className={`tab-btn ${activeTab === 'transfer' ? 'active' : ''}`}
-          onClick={() => setActiveTab('transfer')}
-        >
-          💸 Transfer Money
-        </button>
-        <button
-          className={`tab-btn ${activeTab === 'deposit_withdraw' ? 'active' : ''}`}
-          onClick={() => setActiveTab('deposit_withdraw')}
-        >
-          📥 Deposit / Withdraw
-        </button>
-        <button
-          className={`tab-btn ${activeTab === 'statement' ? 'active' : ''}`}
-          onClick={() => setActiveTab('statement')}
-        >
-          📜 Account Statement & Ledger
-        </button>
-      </div>
-
-      {/* Tab 1: Accounts Overview */}
-      {activeTab === 'overview' && (
+    <div className="dashboard-content-area">
+      {/* View 1: Accounts Overview */}
+      {currentView === 'overview' && (
         <div className="tab-pane">
           <div className="section-title">
-            <h3>Your Accounts</h3>
-            <button className="btn-secondary-sm" onClick={refreshAccountData}>
-              🔄 Refresh Balances
-            </button>
+            <h3>Your Linked Accounts</h3>
+            <div className="title-actions">
+              <button className="btn-secondary-sm" onClick={refreshAccountData}>
+                🔄 Refresh Balances
+              </button>
+            </div>
           </div>
 
           <div className="accounts-grid">
@@ -270,35 +249,59 @@ export default function Dashboard({ user, accounts: initialAccounts, onRefreshAc
                 </div>
 
                 <div className="account-card-footer">
-                  <span className="account-id">Account #{acc.id}</span>
-                  <span className="action-hint">Click to manage</span>
+                  <span className="account-id">ID: #{acc.id}</span>
+                  <span className="action-hint">Active account</span>
                 </div>
               </div>
             ))}
           </div>
 
-          {/* Task 2 Security Guarantees Callout */}
+          {/* Quick Action Tiles */}
+          <div className="quick-actions-row">
+            {user.role !== 'AUDITOR' && (
+              <>
+                <div className="quick-action-tile" onClick={() => onSelectView('transfer')}>
+                  <span className="qa-icon">💸</span>
+                  <h5>Transfer Money</h5>
+                  <p>Send funds safely with double-entry precision and row-locking concurrency.</p>
+                </div>
+                <div className="quick-action-tile" onClick={() => onSelectView('deposit_withdraw')}>
+                  <span className="qa-icon">📥</span>
+                  <h5>Deposit / Withdraw</h5>
+                  <p>Deposit funds or withdraw cash via the system reserve.</p>
+                </div>
+              </>
+            )}
+            <div className="quick-action-tile" onClick={() => onSelectView('statement')}>
+              <span className="qa-icon">📜</span>
+              <h5>View Statement</h5>
+              <p>Inspect immutable ledger records and computed running balances.</p>
+            </div>
+          </div>
+
+          {/* SnovaSys Milestone Callout */}
           <div className="milestone-box">
             <div className="milestone-header">
-              <span className="milestone-badge">Task 2 Live</span>
-              <h4>Core Financial Ledger Guarantees</h4>
+              <span className="milestone-badge">Tasks 1-3 Live</span>
+              <h4>Active Platform Guarantees</h4>
             </div>
             <ul className="guarantee-list">
-              <li>⚖️ <strong>Double-Entry Symmetry:</strong> Every transfer produces 1 Debit and 1 Credit entry. Total debits equal total credits.</li>
-              <li>🛡️ <strong>Pessimistic Row Locking:</strong> Transfers execute with <code>ORDER BY id ASC FOR UPDATE</code> to eliminate deadlocks and race conditions.</li>
-              <li>🛑 <strong>Server-Side Negative Balance Prevention:</strong> Balances cannot drop below zero. Refused attempts generate 0 ledger entries.</li>
-              <li>🔁 <strong>Database-Backed Idempotency:</strong> Duplicate transfer requests return the cached result without duplicate billing.</li>
+              <li>⚖️ <strong>Double-Entry Symmetry:</strong> Paired debits and credits ensure money conservation.</li>
+              <li>🛡️ <strong>Pessimistic Concurrency Locking:</strong> <code>SELECT ... FOR UPDATE</code> with ascending account ID sort.</li>
+              <li>🛑 <strong>Server-Side Negative Balance Prevention:</strong> Check constraint guarantees balances cannot fall below zero.</li>
+              <li>🔑 <strong>Idempotency Deduplication:</strong> Unique client keys prevent duplicate transfers.</li>
+              <li>🔍 <strong>Compliance & Auditing:</strong> Append-only security audit trail and mathematical reconciliation.</li>
             </ul>
           </div>
         </div>
       )}
 
-      {/* Tab 2: Transfer Money */}
-      {activeTab === 'transfer' && (
+      {/* View 2: Transfer Money */}
+      {currentView === 'transfer' && (
         <div className="tab-pane">
           <div className="card-form-wrapper">
             <div className="card-form-header">
-              <h3>Send Money (Account-to-Account Transfer)</h3>
+              <h3>Transfer Money (Double-Entry Engine)</h3>
               <p>Protected by row-level locks, double-entry ledgering, and idempotency keys.</p>
             </div>
 
@@ -374,21 +377,21 @@ export default function Dashboard({ user, accounts: initialAccounts, onRefreshAc
                 )}
               </div>
 
-              {/* Idempotency Key Inspector */}
+              {/* Idempotency Inspector */}
               <div className="idempotency-box">
                 <div className="idemp-header">
-                  <span className="idemp-title">🔑 Idempotency Key (Duplicate Protection)</span>
+                  <span className="idemp-title">🔑 Idempotency Key (Duplicate Prevention)</span>
                   <button
                     type="button"
                     className="btn-link-sm"
                     onClick={() => setTransferIdempotencyKey(generateUUID())}
                   >
-                    Generate New Key
+                    Regenerate Key
                   </button>
                 </div>
                 <code className="idemp-code">{transferIdempotencyKey}</code>
                 <p className="idemp-help">
-                  If network issues cause a retry with this exact key, the backend returns the original result without charging you twice.
+                  Submitting with the exact same key replays the original response without executing duplicate debits.
                 </p>
               </div>
 
@@ -400,12 +403,12 @@ export default function Dashboard({ user, accounts: initialAccounts, onRefreshAc
         </div>
       )}
 
-      {/* Tab 3: Deposit & Withdraw */}
-      {activeTab === 'deposit_withdraw' && (
+      {/* View 3: Deposit & Withdraw */}
+      {currentView === 'deposit_withdraw' && (
         <div className="tab-pane">
           <div className="card-form-wrapper">
             <div className="card-form-header">
-              <h3>Simulated Cash Deposit & Withdrawal</h3>
+              <h3>Simulated Deposit & Withdrawal</h3>
               <p>Routes symmetrically through the System Reserve vault for 100% money conservation.</p>
             </div>
 
@@ -473,8 +476,8 @@ export default function Dashboard({ user, accounts: initialAccounts, onRefreshAc
         </div>
       )}
 
-      {/* Tab 4: Account Statement & Ledger */}
-      {activeTab === 'statement' && (
+      {/* View 4: Account Statement */}
+      {currentView === 'statement' && (
         <div className="tab-pane">
           <div className="statement-header-bar">
             <div>

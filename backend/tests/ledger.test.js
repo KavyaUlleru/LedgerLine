@@ -11,6 +11,10 @@ describe('Task 2: Core Financial Ledger Engine, Concurrency & Idempotency', () =
   const aliceAccountNumber = 'ACC-1001';
 
   beforeAll(async () => {
+    // Reset test accounts to clean initial test balances
+    await query('UPDATE accounts SET balance = 50000, status = $1 WHERE account_number = $2', ['ACTIVE', aliceAccountNumber]);
+    await query('UPDATE accounts SET balance = 30000, status = $1 WHERE account_number = $2', ['ACTIVE', bobAccountNumber]);
+
     // 1. Authenticate Alice (Account Holder)
     const aliceLogin = await request(app).post('/api/auth/login').send({
       email: 'alice@ledgerline.local',
