@@ -10,6 +10,11 @@ const dbUser = process.env.DB_USER || 'postgres';
 const dbPassword = process.env.DB_PASSWORD || 'postgres';
 
 async function ensureDatabaseExists() {
+  if (process.env.DATABASE_URL) {
+    // In cloud databases (Neon, Render, Supabase), the database is provisioned automatically
+    return;
+  }
+
   // Connect to default 'postgres' database to check/create the target database
   const maintenancePool = new Pool({
     host: dbHost,
@@ -41,13 +46,22 @@ async function ensureDatabaseExists() {
 async function initializeDatabase() {
   await ensureDatabaseExists();
 
-  const targetPool = new Pool({
-    host: dbHost,
-    port: dbPort,
-    database: dbName,
-    user: dbUser,
-    password: dbPassword,
-  });
+  const poolConfig = process.env.DATABASE_URL
+    ? {
+        connectionString: process.env.DATABASE_URL,
+        ssl: process.env.DATABASE_URL.includes('localhost')
+          ? false
+          : { rejectUnauthorized: false },
+      }
+    : {
+        host: dbHost,
+        port: dbPort,
+        database: dbName,
+        user: dbUser,
+        password: dbPassword,
+      };
+
+  const targetPool = new Pool(poolConfig);
 
   const schemaPath = path.join(__dirname, '../../database/schema.sql');
   const seedPath = path.join(__dirname, '../../database/seed.sql');

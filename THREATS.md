@@ -84,3 +84,28 @@ Attackers can bypass frontend UI checks using direct API clients (such as cURL, 
 - Treat frontend input validation solely as user-experience feedback.
 - Perform strict, defensive input validation and permission verification on the backend before any database operation is evaluated.
 
+---
+
+## 8. Direct Balance Mutation & Discrepancy Masking
+
+### Threat Description
+An administrative user or database administrator might attempt to manually adjust an account's balance to mask discrepancies or grant unbacked funds, violating the double-entry accounting invariant.
+
+### Mitigation Strategy
+- **No Manual Balance Endpoints:** The administrative API provides zero endpoints for modifying balances; administrators can only alter account operational status (e.g., `ACTIVE` vs `FROZEN`).
+- **Database Trigger Enforcement:** PostgreSQL append-only triggers (`trigger_ledger_immutable`) block any `UPDATE` or `DELETE` statements on `ledger_entries`.
+- **Automated Mathematical Reconciliation:** The system includes a dedicated reconciliation engine (`/api/audit/reconciliation`) that independently aggregates all debits and credits across the entire history of `ledger_entries` and compares them against each account's current cached balance. Any discrepancy immediately flags as `MISMATCH`.
+
+---
+
+## 9. Secret Exposure & Production Deployment Security
+
+### Threat Description
+Accidental leakage of database credentials, cloud connection strings, or JWT private signing keys in public GitHub repositories or client-side bundles.
+
+### Mitigation Strategy
+- Strict `.gitignore` prevents `.env` and sensitive local files from ever being committed to Git.
+- Separation of backend environment secrets from frontend Vite public variables (frontend only consumes `VITE_API_BASE_URL`).
+- Dynamic SSL certificate handling (`rejectUnauthorized: false` for managed cloud databases like Neon or Render) with encrypted transit over HTTPS and PostgreSQL TLS.
+
+

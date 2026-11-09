@@ -1,0 +1,26 @@
+{
+  "name": "ledgerline-root",
+  "version": "1.0.0",
+  "description": "LedgerLine - Immutable, Double-Entry Financial Account Management & Audit Platform",
+  "private": true,
+  "scripts": {
+    "install:all": "npm --prefix backend install && npm --prefix frontend install",
+    "db:init": "npm --prefix backend run db:init",
+    "test": "npm --prefix backend test",
+    "backend:dev": "npm --prefix backend run dev",
+    "backend:start": "npm --prefix backend start",
+    "frontend:dev": "npm --prefix frontend run dev",
+    "frontend:build": "npm --prefix frontend run build"
+  },
+  "keywords": [
+    "fintech",
+    "double-entry-ledger",
+    "concurrency",
+    "idempotency",
+    "postgresql",
+    "audit-trail"
+  ],
+  "author": "Kavya Ulleru",
+  "license": "MIT"
+}
+

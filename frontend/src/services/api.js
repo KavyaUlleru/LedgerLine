@@ -1,5 +1,7 @@
 // API Service for LedgerLine Frontend
-const API_BASE = 'http://localhost:5000/api';
+// Uses VITE_API_BASE_URL when deployed (e.g., Render/Vercel) or falls back to local backend
+const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api';
+
 
 /**
  * Generate a client-side UUID for idempotency keys

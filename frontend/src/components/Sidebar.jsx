@@ -125,3 +125,4 @@ export default function Sidebar({ user, currentView, onSelectView, onLogout }) {
     </aside>
   );
 }
+
