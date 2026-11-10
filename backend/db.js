@@ -1,5 +1,10 @@
+const path = require('path');
 const { Pool } = require('pg');
+
+// Ensure .env is loaded from backend directory regardless of working directory
+require('dotenv').config({ path: path.join(__dirname, '.env') });
 require('dotenv').config();
+
 
 // PostgreSQL connection pool configuration
 // Supports cloud connection strings (DATABASE_URL) with SSL,

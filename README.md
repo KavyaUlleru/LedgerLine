@@ -88,7 +88,8 @@ LedgerLine/
     │   │   ├── AuditLogsView.jsx      # Filterable security audit trail
     │   │   └── ReconciliationView.jsx # Live double-entry mathematical reconciliation
     │   ├── pages/
-    │   │   ├── AuthPage.jsx           # Tabbed Login & Registration form
+    │   │   ├── Login.jsx              # Sign-in form with 1-click evaluator demo presets
+    │   │   ├── Register.jsx           # Account-holder registration form
     │   │   └── Dashboard.jsx          # Tabbed financial hub (Overview, Transfer, Statement)
     │   ├── services/
     │   │   └── api.js                 # Centralized API service with auth token injection
@@ -107,10 +108,11 @@ The database is pre-seeded with 4 roles and initial balances:
 
 | Role | Email | Password | Account Number | Initial Balance |
 | :--- | :--- | :--- | :--- | :--- |
-| **ACCOUNT_HOLDER** | `alice@example.com` | `Password@123` | `ACC-1001` | ₹500.00 (50,000 paise) |
-| **ACCOUNT_HOLDER** | `bob@example.com` | `Password@123` | `ACC-1002` | ₹300.00 (30,000 paise) |
-| **ADMIN** | `admin@example.com` | `Admin@123` | *System Admin* | N/A |
-| **AUDITOR** | `auditor@example.com` | `Auditor@123` | *Compliance Officer* | N/A |
+| **ACCOUNT_HOLDER** | `alice@ledgerline.local` | `Alice123!` | `ACC-1001` | ₹500.00 (50,000 paise) |
+| **ACCOUNT_HOLDER** | `bob@ledgerline.local` | `Bob123!` | `ACC-1002` | ₹300.00 (30,000 paise) |
+| **ADMIN** | `admin@ledgerline.local` | `Admin123!` | *System Admin* | N/A |
+| **AUDITOR** | `auditor@ledgerline.local` | `Auditor123!` | *Compliance Officer* | N/A |
+
 
 > **Pro-Tip for Evaluators:** In the web UI, you can switch between any of these 4 users instantaneously with a single click using the **Quick Switch Demo User** bar at the top of the screen!
 

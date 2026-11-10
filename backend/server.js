@@ -1,6 +1,11 @@
+const path = require('path');
 const express = require('express');
 const cors = require('cors');
+
+// Ensure .env is loaded from backend directory regardless of working directory
+require('dotenv').config({ path: path.join(__dirname, '.env') });
 require('dotenv').config();
+
 
 const authRoutes = require('./routes/authRoutes');
 const accountRoutes = require('./routes/accountRoutes');

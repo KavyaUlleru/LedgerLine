@@ -285,6 +285,7 @@ async function transfer(req, res, next) {
       transactionId,
       amount: transferAmount,
       amountFormatted: `₹${(transferAmount / 100).toFixed(2)}`,
+      newBalance: newSourceBalance,
       sourceAccount: {
         id: sourceAccount.id,
         accountNumber: sourceAccount.account_number,
