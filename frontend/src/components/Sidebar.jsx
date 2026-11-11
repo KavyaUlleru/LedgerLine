@@ -25,8 +25,13 @@ export default function Sidebar({ user, currentView, onSelectView, onLogout }) {
         </div>
       </div>
 
-      {/* User Identity Mini Card */}
-      <div className="sidebar-user-card">
+      {/* User Identity Mini Card - Clicking opens Profile */}
+      <div
+        className={`sidebar-user-card ${currentView === 'profile' ? 'active-profile-card' : ''}`}
+        onClick={() => onSelectView('profile')}
+        title="Click to view and edit your profile"
+        style={{ cursor: 'pointer' }}
+      >
         <div className="sidebar-avatar">
           {user.name ? user.name.charAt(0).toUpperCase() : 'U'}
         </div>
@@ -41,6 +46,7 @@ export default function Sidebar({ user, currentView, onSelectView, onLogout }) {
       {/* Navigation Menu */}
       <nav className="sidebar-nav">
         <div className="nav-section-label">BANKING OPERATIONS</div>
+
 
         <button
           className={`sidebar-nav-item ${currentView === 'overview' ? 'active' : ''}`}
@@ -110,6 +116,15 @@ export default function Sidebar({ user, currentView, onSelectView, onLogout }) {
             </button>
           </>
         )}
+        {/* Account Settings Section (All Roles) */}
+        <div className="nav-section-label nav-section-mt">ACCOUNT SETTINGS</div>
+        <button
+          className={`sidebar-nav-item ${currentView === 'profile' ? 'active' : ''}`}
+          onClick={() => onSelectView('profile')}
+        >
+          <span className="nav-icon">👤</span>
+          <span>My Profile</span>
+        </button>
       </nav>
 
       {/* Sidebar Footer */}

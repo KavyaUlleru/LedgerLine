@@ -159,6 +159,7 @@ export default function App() {
           accounts={accounts}
           selectedAccountId={selectedAccountId}
           onSelectAccount={setSelectedAccountId}
+          onSelectView={setCurrentView}
         />
 
         <main className="view-content-wrapper">
@@ -170,6 +171,7 @@ export default function App() {
             selectedAccountId={selectedAccountId}
             setSelectedAccountId={setSelectedAccountId}
             onRefreshAccounts={setAccounts}
+            onUserUpdated={setUser}
           />
         </main>
       </div>

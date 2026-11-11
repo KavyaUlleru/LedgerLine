@@ -170,5 +170,84 @@ describe('Task 1: Authentication & Role-Based Access Control (RBAC)', () => {
       expect(res.body.error).toMatch(/forbidden/i);
     });
   });
+
+  describe('5. Profile Management & Password Reset', () => {
+    it('PUT /api/auth/profile should allow user to update their name and phone', async () => {
+      const updatedPhone = '+91 9988776655';
+      const updatedName = 'Updated Test User';
+
+      const res = await request(app)
+        .put('/api/auth/profile')
+        .set('Authorization', `Bearer ${accountHolderToken}`)
+        .send({
+          name: updatedName,
+          phone: updatedPhone,
+        });
+
+      expect(res.status).toBe(200);
+      expect(res.body.user.name).toBe(updatedName);
+      expect(res.body.user.phone).toBe(updatedPhone);
+      expect(res.body.user.email).toBe(testEmail); // Email remains unchanged
+    });
+
+    it('PUT /api/auth/profile should reject invalid name or short password', async () => {
+      const res = await request(app)
+        .put('/api/auth/profile')
+        .set('Authorization', `Bearer ${accountHolderToken}`)
+        .send({
+          name: 'A', // Too short
+          password: '123', // Too short
+        });
+
+      expect(res.status).toBe(400);
+    });
+
+    it('POST /api/auth/reset-password should reject non-existent email', async () => {
+      const res = await request(app)
+        .post('/api/auth/reset-password')
+        .send({
+          email: 'unknown_user_email@nowhere.com',
+          newPassword: 'BrandNewPassword123!',
+        });
+
+      expect(res.status).toBe(404);
+      expect(res.body.error).toMatch(/no account found/i);
+    });
+
+    it('POST /api/auth/reset-password should reset password and permit login with new credentials', async () => {
+      const brandNewPassword = 'ResetPassword999!';
+
+      // 1. Reset password
+      const resetRes = await request(app)
+        .post('/api/auth/reset-password')
+        .send({
+          email: testEmail,
+          newPassword: brandNewPassword,
+        });
+
+      expect(resetRes.status).toBe(200);
+      expect(resetRes.body.message).toMatch(/reset successful/i);
+
+      // 2. Login with old password should fail
+      const oldLoginRes = await request(app)
+        .post('/api/auth/login')
+        .send({
+          email: testEmail,
+          password: testPassword,
+        });
+      expect(oldLoginRes.status).toBe(401);
+
+      // 3. Login with new password should succeed
+      const newLoginRes = await request(app)
+        .post('/api/auth/login')
+        .send({
+          email: testEmail,
+          password: brandNewPassword,
+        });
+      expect(newLoginRes.status).toBe(200);
+      expect(newLoginRes.body.token).toBeDefined();
+    });
+  });
 });
+
 

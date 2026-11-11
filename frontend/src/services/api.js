@@ -101,6 +101,21 @@ export async function fetchCurrentUser() {
   });
 }
 
+export async function updateUserProfile(profileData) {
+  return request('/auth/profile', {
+    method: 'PUT',
+    body: JSON.stringify(profileData),
+  });
+}
+
+export async function resetUserPassword({ email, phone, newPassword }) {
+  return request('/auth/reset-password', {
+    method: 'POST',
+    body: JSON.stringify({ email, phone, newPassword }),
+  });
+}
+
+
 export async function checkHealth() {
   return request('/health', {
     method: 'GET',

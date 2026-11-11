@@ -10,7 +10,7 @@ const { logAuditEvent } = require('../utils/auditLogger');
  * Client cannot self-promote to ADMIN or AUDITOR.
  */
 async function register(req, res, next) {
-  const { name, email, password } = req.body;
+  const { name, email, password, phone } = req.body;
 
   // 1. Basic validation
   if (!name || typeof name !== 'string' || name.trim().length < 2) {
@@ -27,6 +27,7 @@ async function register(req, res, next) {
   }
 
   const normalizedEmail = email.trim().toLowerCase();
+  const trimmedPhone = phone && typeof phone === 'string' ? phone.trim() : null;
 
   const client = await getClient();
   try {
@@ -51,11 +52,11 @@ async function register(req, res, next) {
 
     // 4. Insert user with strictly enforced role = 'ACCOUNT_HOLDER'
     const userInsertSql = `
-      INSERT INTO users (name, email, password_hash, role)
-      VALUES ($1, $2, $3, 'ACCOUNT_HOLDER')
-      RETURNING id, name, email, role, created_at;
+      INSERT INTO users (name, email, password_hash, role, phone)
+      VALUES ($1, $2, $3, 'ACCOUNT_HOLDER', $4)
+      RETURNING id, name, email, role, phone, created_at;
     `;
-    const userRes = await client.query(userInsertSql, [name.trim(), normalizedEmail, passwordHash]);
+    const userRes = await client.query(userInsertSql, [name.trim(), normalizedEmail, passwordHash, trimmedPhone]);
     const newUser = userRes.rows[0];
 
     // 5. Automatically create initial customer bank account (STANDARD type, 0 balance)
@@ -102,6 +103,7 @@ async function register(req, res, next) {
         name: newUser.name,
         email: newUser.email,
         role: newUser.role,
+        phone: newUser.phone,
         createdAt: newUser.created_at,
       },
       account: {
@@ -119,6 +121,7 @@ async function register(req, res, next) {
   }
 }
 
+
 /**
  * Controller: Authenticate user & issue JWT
  */
@@ -134,7 +137,7 @@ async function login(req, res, next) {
   try {
     // 1. Find user by email
     const userResult = await query(
-      'SELECT id, name, email, password_hash, role, created_at FROM users WHERE email = $1',
+      'SELECT id, name, email, password_hash, role, phone, created_at FROM users WHERE email = $1',
       [normalizedEmail]
     );
 
@@ -199,6 +202,7 @@ async function login(req, res, next) {
         name: user.name,
         email: user.email,
         role: user.role,
+        phone: user.phone || null,
         createdAt: user.created_at,
       },
       accounts: accountsResult.rows.map((acc) => ({
@@ -222,7 +226,7 @@ async function getMe(req, res, next) {
     const userId = req.user.id;
 
     const userRes = await query(
-      'SELECT id, name, email, role, created_at FROM users WHERE id = $1',
+      'SELECT id, name, email, role, phone, created_at FROM users WHERE id = $1',
       [userId]
     );
 
@@ -238,8 +242,17 @@ async function getMe(req, res, next) {
       [userId]
     );
 
+    const user = userRes.rows[0];
+
     return res.status(200).json({
-      user: userRes.rows[0],
+      user: {
+        id: user.id,
+        name: user.name,
+        email: user.email,
+        role: user.role,
+        phone: user.phone || null,
+        createdAt: user.created_at,
+      },
       accounts: accountsRes.rows.map((acc) => ({
         id: acc.id,
         accountNumber: acc.account_number,
@@ -253,9 +266,142 @@ async function getMe(req, res, next) {
   }
 }
 
+/**
+ * Controller: Update Profile Details (Name, Phone, Password)
+ * Email and Role cannot be modified by user.
+ * Available to ALL roles: ACCOUNT_HOLDER, ADMIN, AUDITOR
+ */
+async function updateProfile(req, res, next) {
+  const userId = req.user.id;
+  const { name, phone, password } = req.body;
+
+  if (!name || typeof name !== 'string' || name.trim().length < 2) {
+    return res.status(400).json({ error: 'Name must be at least 2 characters long' });
+  }
+
+  if (password && (typeof password !== 'string' || password.length < 6)) {
+    return res.status(400).json({ error: 'New password must be at least 6 characters long' });
+  }
+
+  try {
+    let passwordHash = null;
+    if (password && password.trim().length > 0) {
+      passwordHash = await bcrypt.hash(password.trim(), 10);
+    }
+
+    const trimmedPhone = phone && typeof phone === 'string' ? phone.trim() : null;
+
+    const updateSql = passwordHash
+      ? `UPDATE users 
+         SET name = $1, phone = $2, password_hash = $3 
+         WHERE id = $4 
+         RETURNING id, name, email, role, phone, created_at;`
+      : `UPDATE users 
+         SET name = $1, phone = $2 
+         WHERE id = $3 
+         RETURNING id, name, email, role, phone, created_at;`;
+
+    const params = passwordHash
+      ? [name.trim(), trimmedPhone, passwordHash, userId]
+      : [name.trim(), trimmedPhone, userId];
+
+    const result = await query(updateSql, params);
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    const updatedUser = result.rows[0];
+
+    await logAuditEvent({
+      userId: updatedUser.id,
+      action: 'PROFILE_UPDATE',
+      outcome: 'SUCCESS',
+      reason: passwordHash ? 'Profile updated with new password and personal details' : 'Profile details updated',
+    });
+
+    return res.status(200).json({
+      message: 'Profile updated successfully',
+      user: {
+        id: updatedUser.id,
+        name: updatedUser.name,
+        email: updatedUser.email,
+        role: updatedUser.role,
+        phone: updatedUser.phone,
+        createdAt: updatedUser.created_at,
+      },
+    });
+  } catch (error) {
+    next(error);
+  }
+}
+
+/**
+ * Controller: Reset Password (Forgot Password flow)
+ * Allows resetting password given email (and optional phone matching).
+ */
+async function resetPassword(req, res, next) {
+  const { email, phone, newPassword } = req.body;
+
+  if (!email || typeof email !== 'string') {
+    return res.status(400).json({ error: 'Registered email address is required' });
+  }
+
+  if (!newPassword || typeof newPassword !== 'string' || newPassword.length < 6) {
+    return res.status(400).json({ error: 'New password must be at least 6 characters long' });
+  }
+
+  const normalizedEmail = email.trim().toLowerCase();
+
+  try {
+    const userRes = await query('SELECT id, name, email, phone FROM users WHERE email = $1', [normalizedEmail]);
+
+    if (userRes.rows.length === 0) {
+      await logAuditEvent({
+        userId: null,
+        action: 'PASSWORD_RESET',
+        outcome: 'DENIED',
+        reason: `Password reset rejected: No account found with email ${normalizedEmail}`,
+      });
+      return res.status(404).json({ error: 'No account found with this email address' });
+    }
+
+    const user = userRes.rows[0];
+
+    // If user has a registered phone and provided phone, verify match
+    if (phone && user.phone && user.phone.trim() !== phone.trim()) {
+      await logAuditEvent({
+        userId: user.id,
+        action: 'PASSWORD_RESET',
+        outcome: 'DENIED',
+        reason: 'Password reset rejected: Provided phone number does not match registered phone',
+      });
+      return res.status(400).json({ error: 'Provided phone number does not match registered phone' });
+    }
+
+    const passwordHash = await bcrypt.hash(newPassword.trim(), 10);
+    await query('UPDATE users SET password_hash = $1 WHERE id = $2', [passwordHash, user.id]);
+
+    await logAuditEvent({
+      userId: user.id,
+      action: 'PASSWORD_RESET',
+      outcome: 'SUCCESS',
+      reason: 'Password reset completed successfully',
+    });
+
+    return res.status(200).json({
+      message: 'Password reset successful. You can now sign in with your new password.',
+    });
+  } catch (error) {
+    next(error);
+  }
+}
+
 module.exports = {
   register,
   login,
   getMe,
+  updateProfile,
+  resetPassword,
 };
 

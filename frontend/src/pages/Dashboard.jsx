@@ -10,6 +10,7 @@ import {
 import AdminUsersView from '../components/AdminUsersView';
 import AuditLogsView from '../components/AuditLogsView';
 import ReconciliationView from '../components/ReconciliationView';
+import ProfileView from '../components/ProfileView';
 
 export default function Dashboard({
   user,
@@ -19,6 +20,7 @@ export default function Dashboard({
   selectedAccountId,
   setSelectedAccountId,
   onRefreshAccounts,
+  onUserUpdated,
 }) {
   const [accounts, setAccounts] = useState(initialAccounts);
 
@@ -278,21 +280,6 @@ export default function Dashboard({
               <p>Inspect immutable ledger records and computed running balances.</p>
             </div>
           </div>
-
-          {/* SnovaSys Milestone Callout */}
-          <div className="milestone-box">
-            <div className="milestone-header">
-              <span className="milestone-badge">Tasks 1-3 Live</span>
-              <h4>Active Platform Guarantees</h4>
-            </div>
-            <ul className="guarantee-list">
-              <li>⚖️ <strong>Double-Entry Symmetry:</strong> Paired debits and credits ensure money conservation.</li>
-              <li>🛡️ <strong>Pessimistic Concurrency Locking:</strong> <code>SELECT ... FOR UPDATE</code> with ascending account ID sort.</li>
-              <li>🛑 <strong>Server-Side Negative Balance Prevention:</strong> Check constraint guarantees balances cannot fall below zero.</li>
-              <li>🔑 <strong>Idempotency Deduplication:</strong> Unique client keys prevent duplicate transfers.</li>
-              <li>🔍 <strong>Compliance & Auditing:</strong> Append-only security audit trail and mathematical reconciliation.</li>
-            </ul>
-          </div>
         </div>
       )}
 
@@ -551,6 +538,11 @@ export default function Dashboard({
             </div>
           )}
         </div>
+      )}
+
+      {/* View: User Profile Management (All Roles) */}
+      {currentView === 'profile' && (
+        <ProfileView user={user} onUserUpdated={onUserUpdated} />
       )}
     </div>
   );

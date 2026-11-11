@@ -12,8 +12,13 @@ CREATE TABLE IF NOT EXISTS users (
     email VARCHAR(255) UNIQUE NOT NULL,
     password_hash VARCHAR(255) NOT NULL,
     role VARCHAR(20) NOT NULL CHECK (role IN ('ADMIN', 'ACCOUNT_HOLDER', 'AUDITOR')),
+    phone VARCHAR(20),
     created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
+
+-- Ensure phone column exists on existing deployments
+ALTER TABLE users ADD COLUMN IF NOT EXISTS phone VARCHAR(20);
+
 
 -- 2. Accounts Table
 -- Balances stored in paise (integer minor units).

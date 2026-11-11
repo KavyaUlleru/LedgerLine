@@ -6,6 +6,7 @@ export default function Navbar({
   accounts = [],
   selectedAccountId,
   onSelectAccount,
+  onSelectView,
 }) {
   const getViewTitle = () => {
     switch (currentView) {
@@ -23,6 +24,8 @@ export default function Navbar({
         return 'Compliance: Security Audit Trail';
       case 'reconciliation':
         return 'Double-Entry Reconciliation Proof';
+      case 'profile':
+        return 'My Profile & Security Settings';
       default:
         return 'Dashboard';
     }
@@ -58,8 +61,15 @@ export default function Navbar({
         )}
 
         {user && (
-          <div className="navbar-user-info">
-            <span className="navbar-user-greeting">Signed in as <strong>{user.name}</strong></span>
+          <div
+            className="navbar-user-info"
+            onClick={() => onSelectView && onSelectView('profile')}
+            title="Click to view and edit your profile"
+            style={{ cursor: 'pointer' }}
+          >
+            <span className="navbar-user-greeting">
+              👤 Signed in as <strong>{user.name}</strong>
+            </span>
           </div>
         )}
       </div>

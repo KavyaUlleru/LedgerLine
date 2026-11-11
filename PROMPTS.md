@@ -197,3 +197,33 @@ The AI initially left `http://localhost:5000/api` hardcoded in frontend service 
 `feat(deploy): add cloud database support, deployment configuration, and comprehensive documentation`
 
 
+---
+
+## Stage 7: Profile Management, Mobile Contact, Password Reset & Dashboard Decluttering
+
+### Date
+2026-11-11
+
+### What I Asked For
+Remove the "Active Platform Guarantees" callout from the dashboard, enable profile editing (name, mobile number, and password) across all roles (`ACCOUNT_HOLDER`, `ADMIN`, `AUDITOR`) while keeping email immutable, and add a self-service "Forgot Password?" reset feature to the login screen.
+
+### What the AI Produced
+The AI initially suggested allowing the email address to be updated through the profile form, and suggested a password reset endpoint that didn't record audit trails in `audit_events`.
+
+### What Was Wrong With It (Security & Audit Integrity Deficit)
+1. **Account Identity Drift & Audit Desync:** In an auditable financial platform, email is the primary identity bound to security logs and account ownership. Allowing mutable emails risks account hijacking and creates orphaned historical audit records.
+2. **Missing Forensic Log on Credential Change:** Resetting passwords without creating an immutable `PASSWORD_RESET` audit event leaves security teams blind to unauthorized credential modifications.
+
+### What I Did Instead
+1. **Profile Management with Immutable Email & Role:** Added a `phone` column to the `users` table via non-destructive migration, and implemented `PUT /api/auth/profile` allowing users to edit full name, mobile number, and password while strictly locking the email address and role.
+2. **Secure Password Reset Flow:** Implemented `POST /api/auth/reset-password` supporting registered email matching, optional phone verification, bcrypt hashing, and automated logging in `audit_events` with detailed success/failure tracking.
+3. **Dedicated Interactive Profile View (`ProfileView.jsx`):** Created a profile screen accessible to all roles from the sidebar navigation and top navbar, featuring avatar badges, locked email fields, and password confirmation checks.
+4. **Login Flow Enhancement (`Login.jsx`):** Added a "Forgot Password?" interactive toggle allowing self-service credential recovery with real-time feedback alerts.
+5. **Dashboard Polish:** Cleaned up `Dashboard.jsx` by removing the redundant "Active Platform Guarantees" callout box.
+6. **Automated Verification:** Added 4 new integration tests in `backend/tests/auth.test.js`, expanding the test suite to 37 passing tests with zero failures.
+
+### Commit
+`feat(profile): add profile editing, phone number, password reset, and clean dashboard UI`
+
+
+
