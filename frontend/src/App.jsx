@@ -87,16 +87,6 @@ export default function App() {
     setAuthView('login');
   };
 
-  // Evaluator Quick-Switch User (allows instant role testing without manual relogin)
-  const handleQuickSwitchUser = async (email, password) => {
-    try {
-      const data = await loginUser(email, password);
-      handleLoginSuccess(data.token, data.user, data.accounts);
-    } catch (err) {
-      alert(`Could not switch user: ${err.message}`);
-    }
-  };
-
   if (initialLoading) {
     return (
       <div className="loading-screen">
@@ -169,7 +159,6 @@ export default function App() {
           accounts={accounts}
           selectedAccountId={selectedAccountId}
           onSelectAccount={setSelectedAccountId}
-          onQuickSwitchUser={handleQuickSwitchUser}
         />
 
         <main className="view-content-wrapper">

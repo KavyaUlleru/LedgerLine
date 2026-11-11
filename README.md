@@ -33,7 +33,7 @@ Built for the **SnovaSys Hiring Assessment** ("BalanceVault — money movement w
 
 6. **Interactive Financial UI:**
    - Responsive 270px dark-slate sidebar with live API health indicator and role-gated navigation.
-   - Top navbar with dynamic breadcrumbs, account balance dropdown, and a **1-Click Demo Evaluator Switcher** (Alice, Bob, Admin, Auditor) for zero-friction demonstration.
+   - Clean top navbar with dynamic breadcrumbs, active account dropdown, and authenticated user identity.
    - Real-time double-entry reconciliation dashboard verifying $\sum \text{Debits} == \sum \text{Credits}$ across all ledger entries.
 
 ---
@@ -112,9 +112,6 @@ The database is pre-seeded with 4 roles and initial balances:
 | **ACCOUNT_HOLDER** | `bob@ledgerline.local` | `Bob123!` | `ACC-1002` | ₹300.00 (30,000 paise) |
 | **ADMIN** | `admin@ledgerline.local` | `Admin123!` | *System Admin* | N/A |
 | **AUDITOR** | `auditor@ledgerline.local` | `Auditor123!` | *Compliance Officer* | N/A |
-
-
-> **Pro-Tip for Evaluators:** In the web UI, you can switch between any of these 4 users instantaneously with a single click using the **Quick Switch Demo User** bar at the top of the screen!
 
 ---
 

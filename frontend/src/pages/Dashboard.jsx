@@ -332,28 +332,11 @@ export default function Dashboard({
                 <label>Credit Destination Account Number</label>
                 <input
                   type="text"
-                  placeholder="e.g., ACC-1002"
+                  placeholder="e.g., ACC-123456"
                   value={destAccountNumber}
                   onChange={(e) => setDestAccountNumber(e.target.value)}
                   required
                 />
-                <div className="quick-recipients">
-                  <span className="quick-label">Quick Destination:</span>
-                  <button
-                    type="button"
-                    className="btn-chip"
-                    onClick={() => setDestAccountNumber('ACC-1002')}
-                  >
-                    Bob (ACC-1002)
-                  </button>
-                  <button
-                    type="button"
-                    className="btn-chip"
-                    onClick={() => setDestAccountNumber('ACC-1001')}
-                  >
-                    Alice (ACC-1001)
-                  </button>
-                </div>
               </div>
 
               <div className="form-group">

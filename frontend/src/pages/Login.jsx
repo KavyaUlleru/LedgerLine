@@ -22,12 +22,6 @@ export default function Login({ onLoginSuccess, onSwitchToRegister }) {
     }
   };
 
-  const fillQuickLogin = (quickEmail, quickPassword) => {
-    setEmail(quickEmail);
-    setPassword(quickPassword);
-    setError('');
-  };
-
   return (
     <div className="auth-card">
       <div className="auth-header">
@@ -44,7 +38,7 @@ export default function Login({ onLoginSuccess, onSwitchToRegister }) {
             id="email"
             type="email"
             required
-            placeholder="e.g., alice@ledgerline.local"
+            placeholder="e.g., user@example.com"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
           />
@@ -67,41 +61,6 @@ export default function Login({ onLoginSuccess, onSwitchToRegister }) {
         </button>
       </form>
 
-      {/* Quick Demo Login shortcuts for technical interviewers */}
-      <div className="demo-shortcuts">
-        <span className="demo-shortcuts-label">⚡ Quick Demo Logins:</span>
-        <div className="demo-buttons">
-          <button
-            type="button"
-            className="btn-demo"
-            onClick={() => fillQuickLogin('alice@ledgerline.local', 'Alice123!')}
-          >
-            Alice (Account Holder)
-          </button>
-          <button
-            type="button"
-            className="btn-demo"
-            onClick={() => fillQuickLogin('bob@ledgerline.local', 'Bob123!')}
-          >
-            Bob (Account Holder)
-          </button>
-          <button
-            type="button"
-            className="btn-demo"
-            onClick={() => fillQuickLogin('admin@ledgerline.local', 'Admin123!')}
-          >
-            System Admin
-          </button>
-          <button
-            type="button"
-            className="btn-demo"
-            onClick={() => fillQuickLogin('auditor@ledgerline.local', 'Auditor123!')}
-          >
-            Lead Auditor
-          </button>
-        </div>
-      </div>
-
       <div className="auth-footer">
         <p>
           Don't have an account yet?{' '}
@@ -113,4 +72,5 @@ export default function Login({ onLoginSuccess, onSwitchToRegister }) {
     </div>
   );
 }
+
 

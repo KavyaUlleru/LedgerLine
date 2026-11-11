@@ -6,7 +6,6 @@ export default function Navbar({
   accounts = [],
   selectedAccountId,
   onSelectAccount,
-  onQuickSwitchUser,
 }) {
   const getViewTitle = () => {
     switch (currentView) {
@@ -58,43 +57,13 @@ export default function Navbar({
           </div>
         )}
 
-        {/* Demo Fast Switcher for Hackathon Judges / Interviewers */}
-        <div className="evaluator-switch-menu">
-          <span className="evaluator-label">Demo Role Switch:</span>
-          <button
-            type="button"
-            className="btn-evaluator"
-            title="Switch to Alice"
-            onClick={() => onQuickSwitchUser('alice@ledgerline.local', 'Alice123!')}
-          >
-            Alice (Holder)
-          </button>
-          <button
-            type="button"
-            className="btn-evaluator"
-            title="Switch to Bob"
-            onClick={() => onQuickSwitchUser('bob@ledgerline.local', 'Bob123!')}
-          >
-            Bob (Holder)
-          </button>
-          <button
-            type="button"
-            className="btn-evaluator"
-            title="Switch to Admin"
-            onClick={() => onQuickSwitchUser('admin@ledgerline.local', 'Admin123!')}
-          >
-            Admin
-          </button>
-          <button
-            type="button"
-            className="btn-evaluator"
-            title="Switch to Auditor"
-            onClick={() => onQuickSwitchUser('auditor@ledgerline.local', 'Auditor123!')}
-          >
-            Auditor
-          </button>
-        </div>
+        {user && (
+          <div className="navbar-user-info">
+            <span className="navbar-user-greeting">Signed in as <strong>{user.name}</strong></span>
+          </div>
+        )}
       </div>
     </header>
   );
 }
+
